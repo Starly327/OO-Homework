@@ -1,31 +1,23 @@
-#include<iostream>
-#include<vector>
+#include<bits/stdc++.h>
 using namespace std;
 
 class video{
 public:
 	string name;
 	int basicPrice,latePrice;
-	int basicDay,rentDay;
+	int basicDay;
 	int point;
-	video(string name,int rentDay):name(name),rentDay(rentDay){}
-    
-    int getPrice(){
-        int totalPrice=0;
-        if(rentDay>basicDay){
-            totalPrice = basicPrice + (rentDay - basicDay)*latePrice;
-        }else{
-            totalPrice = basicPrice;
-        }
-        return totalPrice;
+	video(string name){
+        this->name = name;
     }
+    
     
     
 };
 
 class newVideo:public video{
 public:
-	newVideo(string name,int rentDay):video(name,rentDay){
+	newVideo(string name):video(name){
         basicPrice = 3;
         latePrice = 2;
         basicDay = 1;
@@ -35,7 +27,7 @@ public:
 
 class oldVideo:public video{
 public:
-	oldVideo(string name,int rentDay):video(name,rentDay){
+	oldVideo(string name):video(name){
         basicPrice = 2;
         latePrice = 1;
         basicDay = 3;
@@ -45,7 +37,7 @@ public:
 
 class childVideo:public video{
 public:
-	childVideo(string name,int rentDay):video(name,rentDay){
+	childVideo(string name):video(name){
         basicPrice = 2;
         latePrice = 1;
         basicDay = 5;
@@ -54,59 +46,83 @@ public:
 };
 
 class customer{
-private:
-    vector<video *> list;
 public:
+    string name;
+    int totalCost;
+    int totalPoint;
+    customer(string name){
+        this->name = name;
+        totalCost = 0;
+        totalPoint = 0;
+    }
+};
+
+class rentRecord{
+public:
+    customer *c;
+    video *v;
+    int day;
+    rentRecord(customer *c, video *v, int day){
+        this->c = c;
+        this->v = v;
+        this->day = day;
+    }
+};
+
+class manage{
+public:
+    set<customer*> customerList;
+    set<video*> videoList;
+    vector<rentRecord *> rentList;
+
+    void addCustomer(customer *c){
+        customerList.insert(c);
+    }
+        
     void addVideo(video *v){
-        list.push_back(v);
+        videoList.insert(v);
     }
 
-    void getInfo(){
+    void addRecord(customer *c, video *v, int totalDay){
+        rentRecord *r = new rentRecord(c,v,totalDay);
+        rentList.push_back(r);
+        c->totalCost += (totalDay > v->basicDay)?v->basicPrice + (totalDay - v->basicDay) * v->latePrice:v->basicPrice;
+        c->totalPoint += v->point;
+    }
+
+    void printRecord(customer *c){
+        cout<<c->name<<endl;
         cout<<"Movies: ";
-        getVideo();
-        cout<<endl<<"Total price: ";
-        getPrice();
+        for(auto rent:rentList){
+            if(rent->c==c)
+                cout<<rent->v->name<<"  ";
+        }
+        cout<<endl<<"Total cost: ";
+        cout<<c->totalCost<<endl;
         cout<<"Total points: ";
-        getPoint();
-    }
-    void getVideo(){
-        for(unsigned idx=0; idx<list.size(); idx++)
-            cout<<list[idx]->name<<"    ";
-            
-        
-    }
-    void getPrice(){
-        int totalPrice=0;
-        for(unsigned int i=0; i<list.size(); i++)
-            totalPrice += list[i]->getPrice();
-        cout<<totalPrice<<endl;
-    }
-    void getPoint(){
-        int totalPoint=0;
-        for(unsigned int i=0; i<list.size(); i++)
-            totalPoint += list[i]->point;
-        cout<<totalPoint<<endl;
+        cout<<c->totalPoint<<endl;
     }
 };
 
 int main(){
-    vector<customer> customerList;
-    customer April,Joe;
-    customerList.push_back(April);
-    customerList.push_back(Joe);
-    video *ptr;
-    ptr = new oldVideo("WonderWoman",3);
-    April.addVideo(ptr);
-    ptr = new oldVideo("WonderWoman",2);
-    Joe.addVideo(ptr);
-    ptr = new newVideo("JusticeLeague",5);
-    April.addVideo(ptr);
-    ptr = new newVideo("Thor3",1);
-    Joe.addVideo(ptr);
+    manage m;
+    customer *april = new customer("April");
+    customer *joe = new customer("Joe"); 
+    video *wonderWoman = new oldVideo("WonderWoman");
+    video *justiceLeague = new newVideo("JusticeLeague");
+    video *thor3 = new newVideo("Thor3");
 
-    cout<<"April:"<<endl;
-    April.getInfo();
-    cout<<"Joe:"<<endl;
-    Joe.getInfo();
-    return 0;
+    m.addCustomer(april);
+    m.addCustomer(joe);
+    m.addVideo(wonderWoman);
+    m.addVideo(justiceLeague);
+    m.addVideo(thor3);
+
+    m.addRecord(april,wonderWoman,3);
+    m.addRecord(joe,wonderWoman,2);
+    m.addRecord(april,justiceLeague,5);
+    m.addRecord(joe,thor3,1);
+    
+    m.printRecord(april);
+    m.printRecord(joe);
 }
